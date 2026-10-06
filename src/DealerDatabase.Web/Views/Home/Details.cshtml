@@ -1,0 +1,178 @@
+@model DealerDatabase.Data.Entities.Dealer
+
+@{
+    ViewData["Title"] = "Dealer Details";
+}
+
+<div>
+    <h2 class="w-100 mx-auto">@Model?.Name</h2>
+    <dl class="row">
+        <dt class="col-sm-3">Trading Name</dt>
+        <dd class="col-sm-9">@Model?.TradingName</dd>
+        <dt class="col-sm-3">Company No</dt>
+        <dd class="col-sm-9">@Model?.CompanyNumber</dd>
+        <dt class="col-sm-3">Status</dt>
+        <dd class="col-sm-9">@Model?.CompanyStatus</dd>
+        <dt class="col-sm-3">InCorporation Date</dt>
+        <dd class="col-sm-9">@Model?.IncorporationDate</dd>
+        <dt class="col-sm-3">Type</dt>
+        <dd class="col-sm-9">@Model?.CompanyType</dd>
+        <dt class="col-sm-3">Address</dt>
+        <dd class="col-sm-9">
+            @Model?.AddressLine1<br />
+            @Model?.AddressLine2<br />
+            @Model?.Town<br />
+            @Model?.Postcode
+
+        </dd>@if (Model?.Phone?.Any() == true)
+        {
+            <dt class="col-sm-3">Phone</dt>
+            <dd class="col-sm-9">@Model?.Phone</dd>
+        }
+
+        @if (Model?.Email?.Any() == true)
+        {
+            <dt class="col-sm-3">Email</dt>
+            <dd class="col-sm-9">@Model?.Email</dd>
+        }
+
+        @if (Model?.Website?.Any() == true)
+        {
+            <dt class="col-sm-3">Website</dt>
+            <dd class="col-sm-9">@Model?.Website</dd>
+        }
+        @if (Model?.VatNumber?.Any() == true)
+        {
+            <dt class="col-sm-3">VAT Number</dt>
+            <dd class="col-sm-9">@Model?.VatNumber</dd>
+        }
+
+    </dl>
+
+    <h3>SAF</h3>
+
+    @if (Model?.SafStatus?.Any() == true || Model?.SafExpiryDate?.Any() == true)
+    {
+        
+        <ul>
+            @if (Model?.SafStatus?.Any() == true)
+            {
+                <li>Status : @Model?.SafStatus</li>
+            }
+            @if (Model?.SafExpiryDate?.Any() == true)
+            {
+                <li>Expiry Date: @Model?.SafExpiryDate</li>
+            }
+
+        </ul>
+
+    }
+    else
+    {
+        <div>NO SAF DATA</div>
+    }
+
+  
+
+    <h3>FCA</h3>
+    @if (Model?.FcaFrn?.Any() == true || Model?.FcaStatus?.Any() == true || Model?.FcaPermissions?.Any() == true)
+    {
+        @if (Model?.FcaFrn?.Any() == true)
+        {
+            <div>FCA Permissions: @Model?.FcaFrn</div>
+
+        }
+        @if (Model?.FcaStatus?.Any() == true)
+        {
+            <div>FCA Status: @Model?.FcaStatus</div>
+
+        }
+
+        @if (Model?.FcaPermissions.Any() == true)
+        {
+            <div>FCA Permissions:</div>
+            <ul>
+                @foreach (var p in Model?.FcaPermissions ?? new List<DealerDatabase.Data.Entities.DealerFcaPermission>())
+                {
+                    <li>@p.Permission</li>
+                }
+            </ul>
+
+        }
+    }
+    else
+    {
+        <div>NO FCA DATA</div>
+    }
+
+    <h3>ICO</h3>
+    @if (Model?.IcoRegistrationNumber?.Any() == true || Model?.IcoExpiryDate?.Any() == true)
+    {
+
+
+        @if (Model?.IcoRegistrationNumber?.Any() == true)
+        {
+            <div>ICO Registration Number: @Model?.IcoRegistrationNumber</div>
+
+        }
+        @if (Model?.IcoExpiryDate?.Any() == true)
+        {
+            <div>ICO Expiry date: @Model?.IcoExpiryDate</div>
+
+        }
+    }
+    else
+    {
+        <div>No ICO Data</div>
+
+    }
+
+    @if (Model?.SicCodes?.Any() == true)
+    {
+        <h3>SIC Codes</h3>
+        <ul>
+            @foreach (var s in Model?.SicCodes ?? new List<DealerDatabase.Data.Entities.DealerSicCode>())
+            {
+                <li>@s.Code</li>
+            }
+        </ul>
+
+    }
+
+    @if (Model?.Officers?.Any() == true)
+    {
+        <h3>Officers</h3>
+        <ul>
+            @foreach (var o in Model?.Officers ?? new List<DealerDatabase.Data.Entities.DealerOfficer>())
+            {
+                <li>@o.Name (@o.Role) - @o.AppointedOn</li>
+            }
+        </ul>
+    }
+
+    
+
+    @if (Model?.GoogleRating > 0 || Model?.TrustpilotScore > 0)
+    {
+        <h3>Ratings</h3>
+        @if (Model?.GoogleRating > 0)
+        {
+            <div>Google Rating: @Model?.GoogleRating</div>
+
+        }
+        @if (Model?.TrustpilotScore > 0)
+        {
+            <div>ICO Expiry date: @Model?.TrustpilotScore</div>
+
+        }
+
+    }
+
+
+    
+</div>
+
+
+<div class="mt-3">
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</div>
