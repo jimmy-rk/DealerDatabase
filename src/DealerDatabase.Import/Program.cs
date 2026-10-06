@@ -311,4 +311,17 @@ await using (var scope = host.Services.CreateAsyncScope())
     await db.SaveChangesAsync();
 }
 
+// Apply VAT numbers to dealers by postcode
+try
+{
+    await using var applyScope = host.Services.CreateAsyncScope();
+    var applyDb = applyScope.ServiceProvider.GetRequiredService<DealerDbContext>();
+    await VatGenerator.ApplyVatNumbersAsync(applyDb);
+    logger.LogInformation("Applied VAT numbers from vat.json to dealers where postcodes matched.");
+}
+catch (Exception ex)
+{
+    logger.LogWarning(ex, "Failed to apply VAT numbers from vat.json");
+}
+
 logger.LogInformation("Pipeline execution completed successfully.");

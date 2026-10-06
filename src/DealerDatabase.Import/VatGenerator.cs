@@ -104,6 +104,70 @@ namespace DealerDatabase
             File.WriteAllText(outPath, JsonSerializer.Serialize(results, new JsonSerializerOptions { WriteIndented = true }));
         }
 
-        
+
+        /// <summary>
+        /// Apply VAT numbers to dealers in the database by matching postcodes found in the
+        /// aggregated vat.json file. For any vat.json entry with a postcode, this method will
+        /// set Dealer.VatNumber = postcode for dealers whose Postcode matches (after normalisation).
+        /// </summary>
+        public static async System.Threading.Tasks.Task ApplyVatNumbersAsync(DealerDbContext db)
+        {
+            var outPath = Path.Combine(SolutionPaths.DataDirectory, "vat.json");
+            if (!File.Exists(outPath)) return;
+
+            List<(string filename, string? postcode)> entries;
+            try
+            {
+                var txt = File.ReadAllText(outPath);
+                entries = JsonSerializer.Deserialize<List<Dictionary<string, object?>>>(txt)!
+                    .Select(d => (
+                        filename: d.ContainsKey("filename") && d["filename"] != null ? d["filename"].ToString() ?? string.Empty : string.Empty,
+                        postcode: d.ContainsKey("postcode") && d["postcode"] != null ? d["postcode"].ToString() : null
+                    ))
+                    .ToList();
+            }
+            catch
+            {
+                return;
+            }
+
+            // Build map of normalized postcode -> filename (we'll store filename into VatNumber)
+            var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var e in entries)
+            {
+                if (string.IsNullOrWhiteSpace(e.postcode)) continue;
+                var norm = Normaliser.NormalisePostcode(e.postcode);
+                if (string.IsNullOrWhiteSpace(norm)) continue;
+                var fname = e.filename?.Trim();
+                if (string.IsNullOrWhiteSpace(fname)) continue;
+                if (!map.ContainsKey(norm)) map[norm] = fname!;
+            }
+
+            if (map.Count == 0) return;
+
+            var dealers = await db.Dealers.ToListAsync();
+            var changed = false;
+            foreach (var dealer in dealers)
+            {
+                if (string.IsNullOrWhiteSpace(dealer.Postcode)) continue;
+                var dnorm = Normaliser.NormalisePostcode(dealer.Postcode);
+                if (string.IsNullOrWhiteSpace(dnorm)) continue;
+                if (map.TryGetValue(dnorm, out var vatValue))
+                {
+                    if (string.IsNullOrWhiteSpace(dealer.VatNumber) || !string.Equals(dealer.VatNumber, vatValue, StringComparison.Ordinal))
+                    {
+                        dealer.VatNumber = vatValue;
+                        changed = true;
+                    }
+                }
+            }
+
+            if (changed)
+            {
+                await db.SaveChangesAsync();
+            }
+        }
+
+
     }
 }
