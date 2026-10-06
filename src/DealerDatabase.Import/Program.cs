@@ -50,3 +50,13 @@ catch (Exception ex)
 }
 
 
+// Execute data Consolidation 
+var masterMap = DealerConsolidator.RunConsolidation(chRoot, fcaRoot, icoRows, mcRows, crawledRows, safDoc);
+
+logger.LogInformation("Consolidated {Count} distinct dealership records successfully.", masterMap.Count);
+
+// Normalize and merge masterMap entries that refer to the same company name
+var mergedMasters = NormaliseMergeConsolidatedData.GetNormaliseMergeConsolidatedData(masterMap);
+
+logger.LogInformation("Merged masterMap into {Count} deduplicated records for persistence.", mergedMasters.Count);
+
